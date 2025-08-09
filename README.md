@@ -1,192 +1,124 @@
-# 🚀 Flask MongoDB CRUD API
+# TinyCompiler — A Mini Arithmetic Expression Compiler in Java
 
-A cleanly-architected, scalable RESTful API built with Flask and MongoDB for managing user resources. Built with Docker support and production best practices for rapid deployment, security, and modularity.
+## Created this just for fun to know how the compiler is designed and it works
 
----
+## Overview
 
-## 🔧 Features
+TinyCompiler is a simple Java-based mini-compiler that takes a mathematical expression as input, compiles it into a Java class on the fly, and then executes it to produce a result.
 
-- ✅ RESTful CRUD endpoints
-- ✅ MongoDB integration via PyMongo
-- ✅ Data validation using Marshmallow
-- ✅ Secure password hashing with Bcrypt
-- ✅ Centralized JSON logging
-- ✅ Scalable Docker setup with Compose
-- ✅ Custom error handling and exceptions
-- ✅ CORS support for frontend compatibility
+It demonstrates the fundamental steps of compilation in a minimal and educational way:
 
----
-
-## 📦 Prerequisites
-
-- [Docker](https://docs.docker.com/get-docker/)
-- [Docker Compose](https://docs.docker.com/compose/)
-- Python 3.9+ (only for local non-Docker dev)
-- MongoDB (local or containerized)
+- **Lexing** (tokenizing input string)
+- **Parsing** (building an Abstract Syntax Tree - AST)
+- **Code generation** (generating Java source code)
+- **Runtime compilation** (compiling the generated Java code dynamically)
+- **Loading and executing** the compiled class
 
 ---
 
-## 🚀 Quick Start (with Docker)
+## Features
 
-```bash
-git clone <your-repo-url>
-cd <your-project-folder>
-docker-compose up --build
-```
-
-- API Base URL: `http://0.0.0.0:5000/users` (or `http://localhost:5000/users`)
-- MongoDB URI (Docker): `mongodb://mongodb:27017/user_db`
+- Supports basic arithmetic expressions with `+`, `-`, `*`, `/`, and parentheses
+- Parses expressions with correct operator precedence
+- Generates valid Java source code for the parsed expression
+- Compiles Java code dynamically at runtime using Java Compiler API
+- Executes the compiled code and prints the result
 
 ---
 
-## 📮 API Endpoints
+## Prerequisites
 
-### 🔍 Get All Users
-- `GET /users`
-- ✅ 200 OK
-
-### 🔍 Get a User by ID
-- `GET /users/<id>`
-- ✅ 200 OK | ❌ 404 Not Found
-
-### ➕ Create a User
-- `POST /users`
-- Body:
-```json
-{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "password": "secure_password"
-}
-```
-- ✅ 201 Created | ❌ 409 Conflict (duplicate email)
-
-### 🔄 Update a User
-- `PUT /users/<id>`
-- Partial or full update:
-```json
-{
-  "name": "Updated Name",
-  "email": "new@example.com"
-}
-```
-- ✅ 200 OK | ❌ 404 Not Found
-
-### ❌ Delete a User
-- `DELETE /users/<id>`
-- ✅ 204 No Content | ❌ 404 Not Found
+- Java Development Kit (JDK) 8 or higher  
+  Make sure `javac` and `java` commands are available in your system PATH. 
 
 ---
 
-## 🧪 Testing with Postman
+## How to Build and Run
 
-You can use the API manually or import a Postman collection.
+1. Clone or download this repository.
 
-Example requests:
+2. Compile the source:
+    ```bash
+    javac TinyCompiler.java
+    ```
 
-### ✅ Test - Get All Users
-- `GET http://0.0.0.0:5000/users`
+3. Run the program with an arithmetic expression as an argument (quote the expression):
+    ```bash
+    java TinyCompiler "(1+2)*3 - 4/2"
+    ```
 
-### ✅ Test - Create User
-- `POST http://0.0.0.0:5000/users`
-```json
-{
-  "name": "Alice",
-  "email": "alice@example.com",
-  "password": "password123"
-}
-```
+4. You should see the generated Java source printed, and the computed result:
+    ```
+    Generated Java source:
+    public class CompiledExpr123456 implements java.util.concurrent.Callable<Double> {
+      public Double call() {
+        return (((1.0+2.0)*3.0)-(4.0/2.0));
+      }
+    }
 
-### ✅ Test - Get User by ID
-- `GET http://0.0.0.0:5000/users/<user_id>`
-
-### ✅ Test - Update User
-- `PUT http://0.0.0.0:5000/users/<user_id>`
-
-### ✅ Test - Delete User
-- `DELETE http://0.0.0.0:5000/users/<user_id>`
+    Result = 7.0
+    ```
 
 ---
 
-## 🗂 Project Structure
+## How It Works (Technical Details)
 
-```
-.
-├── app/
-│   ├── models/            # MongoDB data models
-│   ├── routes/            # API route handlers
-│   ├── services/          # Business logic layer
-│   ├── utils/             # Logger, exceptions, config
-│   └── main.py            # App entry point
-├── Dockerfile             # Flask container
-├── docker-compose.yml     # Compose for Flask + MongoDB
-├── .env                   # Environment variables
-├── requirements.txt       # Python dependencies
-├── test_api.py            # API test cases
-├── test_mongo.py          # Mongo connection test
-└── README.md              # Project documentation
-```
+### 1. Lexer (Tokenizer)
+- Reads input string character-by-character
+- Groups characters into meaningful tokens: numbers, operators, parentheses, EOF
+- Ignores whitespace
 
----
+### 2. Parser
+- Implements a recursive descent parser based on simple arithmetic grammar
+- Builds an **Abstract Syntax Tree (AST)** representing the expression hierarchy and operator precedence
 
-## ⚠️ Error Handling & Status Codes
+### 3. AST Nodes
+- `NumberExpr` represents number literals
+- `BinaryExpr` represents binary operations (`+`, `-`, `*`, `/`)
 
-| Code | Meaning                  |
-|------|--------------------------|
-| 200  | Success                  |
-| 201  | Resource Created         |
-| 204  | Deleted Successfully     |
-| 400  | Bad Request              |
-| 404  | Not Found                |
-| 409  | Conflict (duplicate)     |
-| 500  | Internal Server Error    |
+### 4. Code Generation
+- Converts AST back into Java source code that returns the computed value as a `Double`
+- Wraps the generated expression into a Java class implementing `Callable<Double>`
+
+### 5. Dynamic Compilation and Loading
+- Uses `javax.tools.JavaCompiler` to compile generated Java source in-memory
+- Saves compiled `.class` file to temporary directory
+- Loads the compiled class dynamically with a `URLClassLoader`
+
+### 6. Execution
+- Creates an instance of the generated class via reflection
+- Calls its `call()` method to compute and retrieve the result
 
 ---
 
-## 🔐 Security
+## Concepts and Knowledge Used
 
-- Passwords hashed via `bcrypt`
-- `.env` file for all secrets (excluded from repo)
-- Input validation with Marshmallow
-- CORS support for frontend integrations
-
----
-
-## 🧪 Local Development (Optional)
-
-```bash
-python -m venv venv
-source venv/bin/activate       # Mac/Linux
-venv\Scripts\activate        # Windows
-
-pip install -r requirements.txt
-
-# Setup env vars
-export MONGODB_URI="mongodb://localhost:27017/userdb"
-export JWT_SECRET_KEY="your_secret"
-
-python -m app.main
-```
+- **Compiler Basics**: Lexical analysis, parsing, AST construction, code generation  
+- **Recursive Descent Parsing**: Handwritten parser following operator precedence rules  
+- **Java Compiler API**: Compiling Java code programmatically at runtime  
+- **Reflection and Dynamic Class Loading**: Loading and instantiating classes compiled on the fly  
+- **Java Generics and Type Safety**: Handling unchecked casts safely  
+- **Expression Evaluation**: Converting math expressions into executable code
 
 ---
 
-## 🤝 Contributing
+## Limitations and Future Work
 
-1. Fork the repo
-2. Create a new branch (`git checkout -b feature-xyz`)
-3. Make your changes
-4. Push the branch (`git push origin feature-xyz`)
-5. Create a Pull Request
-
----
-
-## 📜 License
-
-MIT License
+- Only supports basic arithmetic with double precision numbers  
+- No variables, functions, or complex language features  
+- Error handling can be improved  
+- Could be extended to support more operators, functions, or statements  
 
 ---
 
-## 🌐 Author
+## License
 
-Built with ❤️ by [Your Name](https://github.com/your-username)
-# TinyCompiler
+MIT License — feel free to use, modify, and share!
+
+---
+
+## Contact
+
+Created by [AKing-283](https://github.com/AKing-283)
+
+
